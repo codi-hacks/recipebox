@@ -1,9 +1,18 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [package]
 name = "recipebox"
 version = "0.1.0"
+authors = ["Jay Thomas <jay@gfax.ch>"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-clap = { version = "4.0.23", features = ["derive"] }
+clap = { version = "4.0.26", features = ["derive"] }
+log = "0.4.11"
+mio = { version = "0.7.0", features = ["os-poll", "tcp"] }
+webpki = "0.21.0"
+
+[dev-dependencies]
+webpki-roots = "0.20.0"
+
+[features]
