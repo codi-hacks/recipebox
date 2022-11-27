@@ -12,5 +12,13 @@ pub struct Args {
     pub host: String,
     #[arg(short, long, default_value_t = 4000)]
     /// (Optional) Port number to open on host.
-    pub port: usize
+    pub port: usize,
+    /// (Optional) Directory where page templates and recipe markdown files are to be stored.
+    /// This is a folder you typically want to back up or version control.
+    #[arg(default_value_t = String::from("./pages"))]
+    pub pages: String,
+    /// (Optional) Directory where compiled html of the pages are stored. The content is
+    /// rewritten on startup and as needed when pages are updated.
+    #[arg(default_value_t = String::from("./cache"))]
+    pub cache: String
 }
