@@ -8,8 +8,10 @@ use recipebox::args::Args;
 use recipebox::{header_map, server};
 use recipebox::common::{header, status};
 use recipebox::common::response::Response;
+use recipebox::forms::recipe::Recipe;
 use recipebox::server::{Config, Router};
 use recipebox::server::ListenerResult::{SendResponse, SendResponseArc};
+use recipebox::util::{get_content_type};
 
 fn main() -> Result<(), Error> {
     let mut router = Router::new();
@@ -23,6 +25,28 @@ fn main() -> Result<(), Error> {
         })
     });
 
+    router.on("/add-recipe", |_, request| {
+        match Recipe::from_request(&request.body) {
+            Ok(recipe) => {
+                recipe.markdown_to_html();
+                let message = b"You found the secret message!";
+                SendResponse(Response {
+                    status: status::OK,
+                    headers: header_map![(header::CONTENT_LENGTH, "29")],
+                    body: message.to_vec(),
+                })
+            },
+            Err(message) => {
+                SendResponse(Response {
+                    status: status::BAD_REQUEST,
+                    headers: header_map![(header::CONTENT_LENGTH, message.len().to_string())],
+                    body: message.to_vec()
+                })
+            }
+        }
+    });
+
+    router.route("/dashboard", file_router("./dashboard.html"));
     router.route("/", file_router("./index.html"));
 
     let args = Args::parse();
@@ -73,19 +97,4 @@ fn file_response(file_path: &str) -> Response {
         return Response { status: status::OK, headers, body: contents };
     }
     status::NOT_FOUND.into()
-}
-
-fn get_content_type(path: &str) -> &'static str {
-    if path.ends_with(".ico") {
-        return "image/x-icon";
-    } else if path.ends_with(".js") {
-        return "application/javascript";
-    } else if path.ends_with(".svg") {
-        return "image/svg+xml";
-    } else if path.ends_with(".html") {
-        return "text/html";
-    } else if path.ends_with(".css") {
-        return "text/css";
-    }
-    "text/plain"
 }
