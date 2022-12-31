@@ -1,4 +1,9 @@
+# Compiler output
 /target
 
 # Environment file used in development
 .env
+
+# Generated site content
+/cache
+/pages

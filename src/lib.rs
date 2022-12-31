@@ -10,6 +10,9 @@ pub mod server;
 /// Data models for dashboard form POSTs
 pub mod forms;
 
+/// Procedures to run on application boot up
+pub mod setup;
+
 /// Utility components.
 pub mod util;
 

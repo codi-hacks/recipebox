@@ -10,6 +10,8 @@ See the [BLUEPRINTS](https://github.com/codi-hacks/recipebox/issues/1) issue to 
 
 ## Development
 
+It is recommended to use [rustup](https://rustup.rs/) or similar toolchain manager as it will pick up `rust-toolchain.toml` and auto-switch your toolchain to nightly which is needed for certain file io operations.
+
 Start the server:
 
 `cargo run`
