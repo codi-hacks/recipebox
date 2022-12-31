@@ -4,6 +4,8 @@ use std::io::Error;
 use std::sync::{Arc, RwLock};
 
 use clap::Parser;
+use log::LevelFilter;
+use simplelog::{ColorChoice, Config as LogConfig, TermLogger, TerminalMode};
 use recipebox::args::Args;
 use recipebox::{header_map, server};
 use recipebox::common::{header, status};
@@ -11,10 +13,15 @@ use recipebox::common::response::Response;
 use recipebox::forms::recipe::Recipe;
 use recipebox::server::{Config, Router};
 use recipebox::server::ListenerResult::{SendResponse, SendResponseArc};
+use recipebox::setup::check_for_directories;
 use recipebox::util::{get_content_type};
 
 fn main() -> Result<(), Error> {
+    TermLogger::init(LevelFilter::Debug, LogConfig::default(), TerminalMode::Stdout, ColorChoice::Auto).unwrap();
+
     let mut router = Router::new();
+
+    check_for_directories();
 
     router.on("/secret/message/path", |_, _| {
         let message = b"You found the secret message!";
@@ -46,8 +53,8 @@ fn main() -> Result<(), Error> {
         }
     });
 
-    router.route("/dashboard", file_router("./dashboard.html"));
-    router.route("/", file_router("./index.html"));
+    router.route("/dashboard", file_router("./pages/dashboard.hbs"));
+    router.route("/", file_router("./pages/index.hbs"));
 
     let args = Args::parse();
     let addr = format!("{}:{}", args.host, args.port);

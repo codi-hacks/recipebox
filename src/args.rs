@@ -14,7 +14,7 @@ pub struct Args {
     /// (Optional) Port number to open on host.
     pub port: usize,
     /// (Optional) Directory where page templates and recipe markdown files are to be stored.
-    /// This is a folder you typically want to back up or version control.
+    /// This is a folder you typically want to back up and version control.
     #[arg(default_value_t = String::from("./pages"))]
     pub pages: String,
     /// (Optional) Directory where compiled html of the pages are stored. The content is

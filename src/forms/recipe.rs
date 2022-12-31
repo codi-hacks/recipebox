@@ -44,7 +44,8 @@ impl Recipe {
         options.insert(Options::ENABLE_STRIKETHROUGH);
         let parser = Parser::new_ext(&self.recipe, options);
 
-        let mut html_output = String::new();
+        // Pre-allocate enough for a typical html partial
+        let mut html_output = String::with_capacity(4000);
         html::push_html(&mut html_output, parser);
 
         let mut filename = self.title.clone();
