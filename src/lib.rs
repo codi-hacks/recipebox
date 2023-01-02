@@ -7,6 +7,9 @@ pub mod common;
 /// Components for running an HTTP server and handling requests.
 pub mod server;
 
+/// Functions for dealing with page caching
+pub mod cache;
+
 /// Data models for dashboard form POSTs
 pub mod forms;
 

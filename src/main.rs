@@ -77,7 +77,12 @@ fn file_router(directory: &'static str) -> Router {
         path.push_str(uri);
 
         if path.ends_with('/') {
-            path.push_str("index.html")
+            path.push_str("index.hbs");
+        }
+        if path.ends_with(".hbs") {
+            path = path
+                .replace("./pages", "cache")
+                .replace(".hbs", ".html");
         }
 
         if let Some(response) = cache.read().unwrap().get(&path) { // read lock gets dropped after if statement
