@@ -1,7 +1,13 @@
 <html>
   <body>
-    <span>
-      This page intentionally left blank.
-    </span>
+    {{ #each items }}
+      <span>
+        {{ this.title }}
+      </span>
+    {{ else }}
+      <span>
+        No recipes added yet.
+      </span>
+    {{/each}}
   </body>
 </html>

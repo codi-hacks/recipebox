@@ -1,17 +1,24 @@
 use actix_web::{
     HttpResponse,
+    HttpRequest,
     Responder,
     get,
     web::{self, Data}
 };
-use std::sync::Mutex;
+use std::{sync::Mutex};
 use crate::data::DataStore;
 
-#[get("/")]
-async fn index(data: Data<Mutex<DataStore>>) -> impl Responder {
-    HttpResponse::Ok().content_type("text/html").body(include_str!("../../cache/index.html"))
+#[get("/dashboard")]
+async fn dashboard(req: HttpRequest) -> impl Responder {
+    let data = req.app_data::<Data<Mutex<DataStore>>>().unwrap().lock().unwrap();
+    HttpResponse::Ok().content_type("text/html").body(data.dashboard.clone())
 }
 
+#[get("/")]
+async fn index(req: HttpRequest) -> impl Responder {
+    let data = req.app_data::<Data<Mutex<DataStore>>>().unwrap().lock().unwrap();
+    HttpResponse::Ok().content_type("text/html").body(data.index.clone())
+}
 
 pub fn init_routes(config: &mut web::ServiceConfig) {
     config.service(index);

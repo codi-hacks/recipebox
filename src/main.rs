@@ -1,4 +1,4 @@
-use std::io::Error;
+use std::io;
 
 use actix_web::{
     App,
@@ -16,7 +16,7 @@ use recipebox::router::init_routes;
 use recipebox::setup::check_for_directories;
 
 #[actix_web::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<(), io::Error> {
     TermLogger::init(LevelFilter::Debug, LogConfig::default(), TerminalMode::Stdout, ColorChoice::Auto).unwrap();
 
     let args = Args::parse();
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Error> {
     check_for_directories();
 
 
-    let data_store = DataStore::new(33);
+    let data_store = DataStore::new(&args)?;
 
     let server = HttpServer::new(move ||
         App::new()

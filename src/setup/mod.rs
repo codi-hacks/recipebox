@@ -40,6 +40,9 @@ pub fn check_for_directories() -> () {
             &format!("Template \"{}\" does not exist. Generate it?", &index_path),
             "This is the html used to render the home page."
         );
+    }
+    let index_cache_path: String = Path::new(&args.cache).join("index.html").display().to_string();
+    if !check_file(&index_cache_path) {
         if let Err(_) = generate_index() {
             error!("Could not write index template");
             process::exit(1);
