@@ -1,37 +1,47 @@
-use std::collections::HashMap;
-use std::fs;
 use std::io::Error;
-use std::sync::{Arc, RwLock};
 
+use actix_web::{
+    App,
+    HttpServer,
+    middleware::Logger
+};
 use clap::Parser;
-use log::LevelFilter;
+use log::{info, LevelFilter};
 use simplelog::{ColorChoice, Config as LogConfig, TermLogger, TerminalMode};
-use recipebox::args::Args;
-use recipebox::{header_map, server};
-use recipebox::common::{header, status};
-use recipebox::common::response::Response;
-use recipebox::forms::recipe::Recipe;
-use recipebox::server::{Config, Router};
-use recipebox::server::ListenerResult::{SendResponse, SendResponseArc};
-use recipebox::setup::check_for_directories;
-use recipebox::util::{get_content_type};
 
-fn main() -> Result<(), Error> {
+use recipebox::args::Args;
+use recipebox::data::DataStore;
+use recipebox::router::init_routes;
+//use recipebox::forms::recipe::Recipe;
+use recipebox::setup::check_for_directories;
+
+#[actix_web::main]
+async fn main() -> Result<(), Error> {
     TermLogger::init(LevelFilter::Debug, LogConfig::default(), TerminalMode::Stdout, ColorChoice::Auto).unwrap();
 
-    let mut router = Router::new();
+    let args = Args::parse();
+    let address = format!("{}:{}", args.host, args.port);
 
     check_for_directories();
 
-    router.on("/secret/message/path", |_, _| {
-        let message = b"You found the secret message!";
-        SendResponse(Response {
-            status: status::OK,
-            headers: header_map![(header::CONTENT_LENGTH, "29")],
-            body: message.to_vec(),
-        })
-    });
 
+    let data_store = DataStore::new(33);
+
+    let server = HttpServer::new(move ||
+        App::new()
+            .app_data(data_store.clone())
+            .wrap(Logger::default())
+            .wrap(Logger::new("%a %{User-Agent}i"))
+            .configure(init_routes)
+    );
+
+    info!("running on {}:{}", args.host, args.port);
+    server.bind(address)?.run().await
+
+
+
+
+    /*
     router.on("/add-recipe", |_, request| {
         match Recipe::from_request(&request.body) {
             Ok(recipe) => {
@@ -55,18 +65,10 @@ fn main() -> Result<(), Error> {
 
     router.route("/dashboard", file_router("./pages/dashboard.hbs"));
     router.route("/", file_router("./pages/index.hbs"));
-
-    let args = Args::parse();
-    let addr = format!("{}:{}", args.host, args.port);
-
-    println!("running on {}:{}", args.host, args.port);
-    server::listen_http(Config {
-        addr,
-        connection_handler_threads: 5,
-        router,
-    })
+    */
 }
 
+/*
 fn file_router(directory: &'static str) -> Router {
     let mut router = Router::new();
 
@@ -110,3 +112,4 @@ fn file_response(file_path: &str) -> Response {
     }
     status::NOT_FOUND.into()
 }
+*/

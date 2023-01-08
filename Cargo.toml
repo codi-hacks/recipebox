@@ -7,6 +7,7 @@ authors = ["Jay Thomas <jay@gfax.ch>"]
 edition = "2021"
 
 [dependencies]
+actix-web = "4.2.1"
 clap = { version = "4.0", features = ["derive"] }
 form_urlencoded = "1.1.0"
 handlebars = "4.3.5"
