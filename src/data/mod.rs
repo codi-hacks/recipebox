@@ -9,8 +9,8 @@ pub struct DataStore {
 
 impl DataStore {
     pub fn new(args: &Args) -> Result<Data<Mutex<DataStore>>, io::Error> {
-        let index_path: String = Path::new(&args.cache).join("index.html").display().to_string();
-        let dashboard_path: String = Path::new(&args.cache).join("dashboard.html").display().to_string();
+        let index_path = Path::new(&args.cache).join("index.html");
+        let dashboard_path = Path::new(&args.cache).join("dashboard.html");
 
         Ok(Data::new(Mutex::new(DataStore {
             index: fs::read_to_string(index_path)?,

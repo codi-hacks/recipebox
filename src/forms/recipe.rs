@@ -1,10 +1,14 @@
 use std::collections::HashMap;
-use std::fs::File;
+use std::{fs, path};
 use std::io::Write;
 use pulldown_cmark::{Parser, html, Options};
 use form_urlencoded::parse as uri_parse;
+use matter::matter;
 use regex::Regex;
+use serde::Serialize;
+use crate::cache::CacheError;
 
+#[derive(Serialize)]
 pub struct Recipe {
     pub title: String,
     pub recipe: String
@@ -36,6 +40,23 @@ impl Recipe {
         Ok(Recipe { title, recipe })
     }
 
+    pub fn from_file(path: &path::PathBuf) -> Result<Recipe, CacheError> {
+        let input = fs::read_to_string(path)
+            .map_err(|err| { CacheError::FileError(err.to_string()) })?;
+        if let Some((matter, markdown)) = matter(&input) {
+            return Ok(Recipe {
+                title: matter,
+                recipe: markdown
+            })
+        }
+        Err(CacheError::MarkdownError(
+            String::from(format!(
+                "{} does not contain frontmatter and/or markdown.",
+                path.display()
+            ))
+        ))
+    }
+
     /// Attempt to write markdown as an html file or return error
     pub fn markdown_to_html(&self) -> Result<(), std::io::Error> {
         // Strikethroughs are not part of the CommonMark standard
@@ -55,9 +76,9 @@ impl Recipe {
         let regex = Regex::new(r"[^a-z]").unwrap();
         let filename = regex.replace_all(&filename, "_");
 
-        let mut file = File::create_new(format!("{}.md", filename))?;
+        let mut file = fs::File::create_new(format!("{}.md", filename))?;
         file.write_all(self.recipe.as_bytes())?;
-        let mut file = File::create_new(format!("{}.html", filename))?;
+        let mut file = fs::File::create_new(format!("{}.html", filename))?;
         file.write_all(html_output.as_bytes())?;
 
         Ok(())
