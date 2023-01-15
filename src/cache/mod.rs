@@ -1,16 +1,18 @@
-use std::{fs, path::Path};
+use std::{fs, path::Path, vec::Vec};
 use std::fs::OpenOptions;
 use std::io::prelude::*;
-use std::io::Error as IoError;
 
 use clap::Parser;
-use handlebars::{Handlebars, RenderError};
+use handlebars::Handlebars;
 use serde::Serialize;
 use crate::args::Args;
+use crate::forms::recipe::Recipe;
 
+#[derive(Serialize)]
 pub enum CacheError {
-    TemplateError(RenderError),
-    FileError(IoError)
+    TemplateError(String),
+    FileError(String),
+    MarkdownError(String)
 }
 
 #[derive(Serialize)]
@@ -23,7 +25,7 @@ pub fn generate_dashboard() -> Result<usize, CacheError> {
 
     let dashboard_page_path: String = Path::new(&args.pages).join("dashboard.hbs").display().to_string();
     let source = fs::read_to_string(dashboard_page_path)
-        .map_err(|err| { CacheError::FileError(err) })?;
+        .map_err(|err| { CacheError::FileError(err.to_string()) })?;
 
 
     let handlebars = Handlebars::new();
@@ -33,72 +35,71 @@ pub fn generate_dashboard() -> Result<usize, CacheError> {
     };
 
     let output = handlebars.render_template(&source, &data)
-        .map_err(|err| { CacheError::TemplateError(err) })?;
+        .map_err(|err| { CacheError::TemplateError(err.to_string()) })?;
     let output_path = Path::new(&args.cache).join("dashboard.html");
 
     let mut file = OpenOptions::new()
         .write(true)
         .create(true)
         .open(output_path)
-        .map_err(|err| { CacheError::FileError(err) })?;
+        .map_err(|err| { CacheError::FileError(err.to_string()) })?;
 
     file.write(output.as_bytes())
-        .map_err(|err| { CacheError::FileError(err) })
-}
-
-#[derive(Serialize)]
-struct IndexDataItem {
-    title: String
+        .map_err(|err| { CacheError::FileError(err.to_string()) })
 }
 
 #[derive(Serialize)]
 struct IndexData {
-    items: Vec<IndexDataItem>
+    recipes: Vec<Recipe>,
+    errors: Vec<CacheError>
 }
 
 pub fn generate_index() -> Result<usize, CacheError> {
     let args = Args::parse();
 
-    let index_page_path: String = Path::new(&args.pages).join("index.hbs").display().to_string();
+    let index_page_path = Path::new(&args.pages).join("index.hbs");
     let source = fs::read_to_string(index_page_path)
-        .map_err(|err| { CacheError::FileError(err) })?;
+        .map_err(|err| { CacheError::FileError(err.to_string()) })?;
 
     let handlebars = Handlebars::new();
 
     let dir_entries = fs::read_dir(&args.pages)
-        .map_err(|err| { CacheError::FileError(err) })?;
+        .map_err(|err| { CacheError::FileError(err.to_string()) })?;
 
+    let mut recipes = Vec::new();
+    let mut errors = Vec::new();
+    // Scan directory from markdown files and index them
     for entry in dir_entries {
         let path = entry
-            .map_err(|err| { CacheError::FileError(err) })?
+            .map_err(|err| { CacheError::FileError(err.to_string()) })?
             .path();
         if path.is_file() {
             if let Some(ext) = path.extension() {
                 if ext.to_str() == Some("md") {
-                    println!("Name: {}", path.display());
-                    //read md into data.items (IndexData struct instance)
+                    match Recipe::from_file(&path) {
+                        Ok(recipe) => recipes.push(recipe),
+                        Err(error) => errors.push(error)
+                    }
                 }
             }
         }
     }
 
     let data = IndexData {
-        items: vec![
-            IndexDataItem { title: String::from("Baked Mayonnaise") },
-            IndexDataItem { title: String::from("Totally a Cheesecake (and not baked mayonnaise)") }
-        ]
+        recipes,
+        errors
     };
 
     let output = handlebars.render_template(&source, &data)
-        .map_err(|err| { CacheError::TemplateError(err) })?;
+        .map_err(|err| { CacheError::TemplateError(err.to_string()) })?;
     let output_path = Path::new(&args.cache).join("index.html");
 
     let mut file = OpenOptions::new()
         .write(true)
         .create(true)
         .open(output_path)
-        .map_err(|err| { CacheError::FileError(err) })?;
+        .map_err(|err| { CacheError::FileError(err.to_string()) })?;
 
     file.write(output.as_bytes())
-        .map_err(|err| { CacheError::FileError(err) })
+        .map_err(|err| { CacheError::FileError(err.to_string()) })
 }
